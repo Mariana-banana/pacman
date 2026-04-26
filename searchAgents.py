@@ -537,8 +537,43 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    food_list = foodGrid.asList()
+
+    if not food_list: # all food was eaten, distance to objective is zero
+        return 0
+
+    min_to_food = min(util.manhattanDistance(position, f) for f in food_list) 
+
+    if len(food_list) == 1:
+        return min_to_food
+
+    # Prim's MST on food positions only
+    n = len(food_list)
+    in_mst = [False for _ in range(n)] # foods added to MST
+    min_dist = [float('inf') for _ in range(n)] 
+    min_dist[0] = 0 # MST starting point
+
+    mst_cost = 0
+    for _ in range(n):
+
+        min_val = float('inf')
+        u = -1
+
+        for i in range(n):
+            if not in_mst[i] and min_dist[i] < min_val:
+                min_val = min_dist[i]
+                u = i
+
+        in_mst[u] = True
+        mst_cost += min_dist[u]
+
+        for v in range(n):
+            if not in_mst[v]:
+                d = util.manhattanDistance(food_list[u], food_list[v])
+                if d < min_dist[v]:
+                    min_dist[v] = d
+
+    return min_to_food + mst_cost # cost to closest food and all other food derived from it
 
 
 class ClosestDotSearchAgent(SearchAgent):
