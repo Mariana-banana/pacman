@@ -412,6 +412,10 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
+def manhattanDistance(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -425,11 +429,42 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
-    corners = problem.corners  # These are the corner coordinates
-    walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
+    # corners = problem.corners  # These are the corner coordinates
+    # walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    # Use Prim's MST algorithm to estimate the cost
+    # of visiting all remaining corners from the current position
+
+    position, remaining = state
+    if not remaining:
+        return 0
+
+    min_to_corner = min(manhattanDistance(position, c) for c in remaining)
+
+    if len(remaining) <= 1:
+        return min_to_corner
+
+    remaining_list = list(remaining)
+    visited = {remaining_list[0]}
+    unvisited = set(remaining_list[1:])
+    mst_cost = 0
+
+    while unvisited:
+        best_node = None
+        best_edge = float("inf")
+
+        for v in visited:
+            for u in unvisited:
+                d = manhattanDistance(v, u)
+                if d < best_edge:
+                    best_edge = d
+                    best_node = u
+
+        mst_cost += best_edge
+        visited.add(best_node)
+        unvisited.remove(best_node)
+
+    return min_to_corner + mst_cost
 
 
 class AStarCornersAgent(SearchAgent):
